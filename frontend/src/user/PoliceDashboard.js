@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Menu from "../core/Menu";
 import { isAuthenticated } from "../auth";
-import { listPoliceComplains, updateComplainStatus, getUnresolvedComplain, getPoliceAssign } from "./apiCore";
+import { listComplains, getUnresolvedComplain, getComplainAssign, getPoliceDetails, updatePoliceAssign, updateComplainStatus} from "./policeApiCore";
 
 const PoliceDashboard = () => {
     
     const { user } = isAuthenticated();
     const [complains, setComplains] = useState([]);
     const [run, setRun] = useState(false);
-    const loadComplains = () => {
-            listPoliceComplains(user).then(data => {
+    const [status, setStatus] = useState([]);
+    
+     const loadComplains = () => {
+            listComplains(user).then(data => {
             if(data.error){
                 console.log(data.error);
             }else{
@@ -17,41 +19,79 @@ const PoliceDashboard = () => {
             }
         }); 
      };
-  
-    const clickStatus = (complain_id) => {
-      updateComplainStatus(complain_id).then(data => {
-        if(data.error){
-            console.log(data.error);
-        }else{     
-            unresolvedComplain();
-            setRun(!run); 
-        }    
-      });
+    
+    const policeDetails = () => {
+        getPoliceDetails(user).then(data => {
+            if(data.error){
+                console.log(data.error);
+            }else{
+                setStatus(data.user_status);
+                unresolvedComplain(data.user_status, 0);
+            }
+        });
     };
     
-    const unresolvedComplain = () => {
+    const unresolvedComplain = (status, complain_status) => {
+        if(status == 0 && complain_status == 0){
         getUnresolvedComplain().then(data => {
             if(data.error){
-            console.log(data.error);
+            upPoliceStatus(user, 0);
         }else{  
-            updatePoliceAssign();
-           console.log(data);
-            setRun(!run); 
+            upComplainAssign();
+            upPoliceStatus(user, 1);
+            upComplainStatus();
         }    
         });
-    }
+        }
+    };
     
-    const updatePoliceAssign = () => {
-        getPoliceAssign(user).then(data => {
+    const upComplainAssign = () => {
+        getComplainAssign(user).then(data => {
             if(data.error){
             console.log(data.error);
         }else{  
             console.log(data);
-            setRun(!run); 
+        }    
+        });
+    };
+    const upComplainStatus = (complain_id) => {
+        updateComplainStatus(complain_id).then(data => {
+            if(data.error){
+            console.log(data.error);
+        }else{  
+            console.log(data);
+        }    
+        });
+    };
+    
+    const upPoliceStatus = (user, status) => {
+        console.log(status);
+        updatePoliceAssign(user, status).then(data => {
+            if(data.error){
+            console.log(data.error);
+        }else{  
+            console.log(data);
+            setRun(!run);
         }    
         });
     }
     
+    useEffect(() => {
+        policeDetails();
+    }, []);
+    
+    useEffect(() => {
+        loadComplains();
+    }, [run])
+        
+    const clickStatus = (event) => (complain_id, complain_status) => {
+        console.log(event);
+        event.preventDefault();
+        unresolvedComplain(0, complain_status);
+        upComplainStatus(complain_id);
+        setRun(!run);
+    };
+ 
     const listTable = () => (
       <table className="table table-striped tableBox">
     <thead>
@@ -73,7 +113,7 @@ const PoliceDashboard = () => {
              <td>{complain.car_number}</td>
              <td>{complain.car_model}</td>
              <td>{complain.createdAt.toString().slice(0,10)}</td>
-             <td onClick = {() => clickStatus(complain._id)}>{complain.complain_status === 0 ? <p>Not Solved</p> : <p>Solved</p>}</td>
+             <td onClick = {() => clickStatus(complain._id, complain.complain_status)}>{complain.complain_status === 0 ? <p>Not Solved</p> : <p>Solved</p>}</td>
              <td>{complain.user_id}
                  <td>Hello</td>
                </td>
@@ -81,10 +121,7 @@ const PoliceDashboard = () => {
         ))}
     </tbody>
   </table>
-    );
-
-  
-    
+    );  
     useEffect(() => {
         loadComplains();
     }, [run]);
@@ -96,7 +133,7 @@ const PoliceDashboard = () => {
             <div className = "row">
               <div className = "col-md-12">
                {JSON.stringify(complains) ? listTable() : "No Cases"}
-               {user}
+               {status}
               </div>
             </div>
           </div>
