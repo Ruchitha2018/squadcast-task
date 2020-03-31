@@ -9,7 +9,8 @@ const PoliceDashboard = () => {
     const [complains, setComplains] = useState([]);
     const [run, setRun] = useState(false);
     const [status, setStatus] = useState([]);
-    
+    const [customer, setCustomer] = useState([]);
+
      const loadComplains = () => {
             listComplains(user).then(data => {
             if(data.error){
@@ -84,44 +85,64 @@ const PoliceDashboard = () => {
         loadComplains();
     }, [run])
         
-    const clickStatus = (event) => (complain_id, complain_status) => {
-        console.log(event);
+    const clickStatus =  (complain_id, complain_status, event) => {
         event.preventDefault();
-        unresolvedComplain(0, complain_status);
         upComplainStatus(complain_id);
+        unresolvedComplain(0, complain_status);
         setRun(!run);
     };
- 
-    const listTable = () => (
-      <table className="table table-striped tableBox">
-    <thead>
-      <tr>
-        <th>Sr.No</th>
-        <th>Case No</th>
-        <th>Car Number</th>
-        <th>Car Model</th>
-        <th>Registered On</th>
-        <th>Status</th>
-        <th>Customer</th>
-      </tr>
-    </thead>
-    <tbody>
+    
+    const getCustomerDetails = (user_id, event) => {
+        event.preventDefault();
+       getPoliceDetails(user_id).then(data => {
+            if(data.error){
+                console.log(data.error);
+            }else{
+                console.log(data);
+               setCustomer(data); 
+            }
+        });
+    };
+    
+    const showCustomerDetails = () => (
+      <div className = "hello">
+        Username: {JSON.stringify(customer.user_name)}
+      </div>    
+    );
+   const listDesign = () => (
+     <div className = "row">
         {complains.map((complain, index) => (
-           <tr>
-             <td>{index+1}</td>
-             <td>{complain.complain_id}</td>
-             <td>{complain.car_number}</td>
-             <td>{complain.car_model}</td>
-             <td>{complain.createdAt.toString().slice(0,10)}</td>
-             <td onClick = {() => clickStatus(complain._id, complain.complain_status)}>{complain.complain_status === 0 ? <p>Not Solved</p> : <p>Solved</p>}</td>
-             <td>{complain.user_id}
-                 <td>Hello</td>
-               </td>
-           </tr>
-        ))}
-    </tbody>
-  </table>
-    );  
+      <div className = "col-md-4">
+         <div className = "box">
+           <h5>{complain.complain_id}</h5>
+           <table className="table table-striped table-bordered tableBox">
+              <tr>
+             <td>Car Number</td>
+             <td>{complain.car_number}</td></tr>
+              <tr>
+             <td>Car Model</td>
+             <td>{complain.car_model}</td></tr>
+             <tr>
+             <td>Car Number</td>
+             <td>{complain.car_number}</td></tr>
+             <tr>
+             <td>Registered On</td>
+             <td>{complain.createdAt.toString().slice(0,10)}</td></tr>
+             <tr>
+             <td>Status</td>
+             <td onClick = {(event) => clickStatus(complain._id, complain.complain_status, event)}>{complain.complain_status === 0 ? <p>Not Solved</p> : <span className="badge badge-success">Solved</span>}</td></tr>
+            <tr>
+             <td>Customer</td>
+             <td onClick = {(event) => getCustomerDetails(complain.user_id, event)}>CUST{complain.user_id.slice(0,6)}
+             {showCustomerDetails()}
+             </td></tr>     
+           </table>
+         </div>
+      </div>
+      ))}
+     </div>     
+    );
+    
     useEffect(() => {
         loadComplains();
     }, [run]);
@@ -130,12 +151,8 @@ const PoliceDashboard = () => {
         <div>
         <Menu />
           <div className = "container">
-            <div className = "row">
-              <div className = "col-md-12">
-               {JSON.stringify(complains) ? listTable() : "No Cases"}
-               {status}
-              </div>
-            </div>
+               {JSON.stringify(complains) ? listDesign() : "No Cases"}
+                {JSON.stringify(customer)}
           </div>
         </div>
     );

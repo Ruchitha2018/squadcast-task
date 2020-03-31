@@ -20,3 +20,15 @@ body{
 .tableBox{
     background: white;
 }
+.box {
+    background: white;
+    padding: 10px;
+    margin: 05px;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.08);
+    border-top:3px solid #252c66;
+}
+.box h5 {
+    text-align: center;
+    color: gray;
+    font-weight: bold;
+}
